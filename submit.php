@@ -1,9 +1,9 @@
 <?php
 // Database connection (replace with your actual database details)
-$servername = "115.245.190.162/32";
+$servername = "SG-dbpal-12390-mysql-master.servers.mongodirector.com";
 $username = "sgroot";
 $password = "BO479WvME-OQvxb3";
-$dbname = "dbpal";
+$dbname = "pal_samaj";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
