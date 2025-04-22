@@ -1,13 +1,395 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Population Registration</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+  <style>
+    .step {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .step.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    #preview-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 15px;
+    }
+    #preview {
+      max-width: 250px;
+      max-height: 250px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .delete-icon {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    /* Button Gradient + Animation */
+    .btn-gradient {
+     background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: white;
+      border: none;
+      transition: all 0.3s ease-in-out;
+    }
+    .btn-gradient:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    }
+    .btn-gradient:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(0, 123, 255, 0.6) inset;
+    }
+
+    .btn-success:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+    .btn-success:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.6) inset;
+    }
+    .house-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  font-size: 14px;
+}
+
+.house-option input {
+  display: none;
+}
+
+.house-option i {
+  font-size: 24px;
+  margin-bottom: 5px;
+  color: #4e54c8;
+}
+
+.house-option input:checked + i,
+.house-option input:checked + span {
+  color: white;
+}
+
+.house-option input:checked + i {
+  background: linear-gradient(45deg, #4e54c8, #8f94fb);
+  padding: 10px;
+  border-radius: 50%;
+}
+
+.house-option:hover {
+  background: #f0f0f0;
+}
+
+.house-option input:checked ~ i,
+.house-option input:checked ~ span {
+  color: #fff;
+}
+
+.house-option input:checked ~ span {
+  background: linear-gradient(45deg, #4e54c8, #8f94fb);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.row.mb-3 > .col-md-6,
+    .row.mb-3 > .col-md-4 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-primary text-white text-center">
+      <h4><i class="bi bi-person-lines-fill"></i> Population Registration Form</h4>
+    </div>
+    <div class="card-body">
+      <form id="regForm" action="submit.php" method="POST" enctype="multipart/form-data">
+
+        <!-- Step 1: Personal Details -->
+        <div class="step active">
+          <h5 class="mb-3"><i class="bi bi-person-circle"></i> Step 1: Personal Details</h5>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person"></i> Full Name</label>
+              <input type="text" name="name" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person-badge"></i> Father's Name</label>
+              <input type="text" name="father" class="form-control" required />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-calendar-date"></i> Date of Birth</label>
+              <input type="date" name="dob" class="form-control" required />
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-gender-ambiguous"></i> Gender</label>
+              <select name="gender" class="form-select" required>
+                <option disabled selected>Select Gender</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="bi bi-heart"></i> Marital Status</label>
+              <select name="married" class="form-select" required>
+                <option disabled selected>Select Status</option>
+                <option>Married</option>
+                <option>Unmarried</option>
+                <option>Widowed</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-journal-bookmark"></i> Education</label>
+              <select name="education" class="form-select" required>
+                <option disabled selected>Select Education</option>
+                <option>No Formal Education</option>
+                <option>Primary</option>
+                <option>Secondary</option>
+                <option>Higher Secondary</option>
+                <option>Graduate</option>
+                <option>Post Graduate</option>
+                <option>Diploma / ITI</option>
+                <option>PhD / Doctorate</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-briefcase"></i> Occupation</label>
+              <input type="text" name="occupation" class="form-control" />
+            </div>
+          </div>
+          <button type="button" class="btn btn-gradient float-end" onclick="nextStep()">Next <i class="bi bi-arrow-right"></i></button>
+        </div>
+
+        <!-- Step 2: Asset & Contact Info -->
+        <div class="step">
+          <h5 class="mb-3"><i class="bi bi-house-door"></i> Step 2: Assets & Contact Info</h5>
+<div class="mb-3">
+  <label class="form-label d-block">House Type</label>
+  <div class="d-flex flex-wrap gap-3">
+    <label class="house-option">
+      <input type="radio" name="house_type" value="Apartment" required>
+      <i class="bi bi-building"></i>
+      <span>Apartment</span>
+    </label>
+
+    <label class="house-option">
+      <input type="radio" name="house_type" value="Bungalow" required>
+      <i class="bi bi-house-door-fill"></i>
+      <span>Bungalow</span>
+    </label>
+
+    <label class="house-option">
+      <input type="radio" name="house_type" value="Hut" required>
+      <i class="bi bi-house-fill"></i>
+      <span>Hut</span>
+    </label>
+  </div>
+</div>
+
+<div class="mb-3">
+  <label class="form-label"><i class="bi bi-piggy-bank"></i> Animal Count</label>
+  <div class="row g-3">
+    <div class="col-6 col-md-3">
+      <input type="number" name="cow" class="form-control" placeholder="Cows">
+    </div>
+    <div class="col-6 col-md-3">
+      <input type="number" name="goat" class="form-control" placeholder="Goats">
+    </div>
+    <div class="col-6 col-md-3">
+      <input type="number" name="buffalo" class="form-control" placeholder="Buffaloes">
+    </div>
+    <div class="col-6 col-md-3">
+      <input type="number" name="sheep" class="form-control" placeholder="Sheep">
+    </div>
+  </div>
+</div>
+
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-globe"></i> Do You Own Land?</label><br>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="land" value="Yes" required>
+              <label class="form-check-label">Yes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="land" value="No" required>
+              <label class="form-check-label">No</label>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-phone"></i> Mobile Number</label>
+              <input type="tel" name="mobile" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-envelope"></i> Email</label>
+              <input type="email" name="email" class="form-control">
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-people-fill"></i> Religion</label>
+              <select name="religion" class="form-select" required>
+                <option disabled selected>Select Religion</option>
+                <option>Hindu</option>
+                <option>Muslim</option>
+                <option>Christian</option>
+                <option>Sikh</option>
+                <option>Buddhist</option>
+                <option>Jain</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-person-bounding-box"></i> Caste</label>
+              <input type="text" name="caste" class="form-control" required>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary" onclick="prevStep()"><i class="bi bi-arrow-left"></i> Back</button>
+          <button type="button" class="btn btn-gradient float-end" onclick="nextStep()">Next <i class="bi bi-arrow-right"></i></button>
+        </div>
+
+        <!-- Step 3: Upload & Password -->
+        <div class="step">
+          <h5 class="mb-3"><i class="bi bi-lock-fill"></i> Step 3: Photo & Password</h5>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-image"></i> Upload Photo</label>
+            <input type="file" id="photoInput" name="photo" accept="image/*" class="form-control" required>
+            <input type="hidden" id="croppedImageData" name="cropped_image">
+          </div>
+
+          <div id="preview-container">
+            <div style="position: relative;">
+              <img id="preview" />
+              <button type="button" class="delete-icon" onclick="removeImage()">&times;</button>
+            </div>
+            <button type="button" class="btn btn-warning mt-2" onclick="cropImage()">Crop Image</button>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-shield-lock"></i> Password</label>
+              <input type="password" name="password" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-shield-check"></i> Confirm Password</label>
+              <input type="password" name="confirm_password" class="form-control" required>
+            </div>
+          </div>
+          <br/>
+          <button type="button" class="btn btn-secondary" onclick="prevStep()"><i class="bi bi-arrow-left"></i> Back</button>
+          <button type="submit" class="btn btn-gradient float-end"><i class="bi bi-send-check"></i> Submit</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+  let currentStep = 0;
+  const steps = document.querySelectorAll('.step');
+  const preview = document.getElementById('preview');
+  const photoInput = document.getElementById('photoInput');
+  const previewContainer = document.getElementById('preview-container');
+  const croppedImageData = document.getElementById('croppedImageData');
+  let cropper;
+
+  function showStep(index) {
+    steps.forEach((step, i) => step.classList.toggle('active', i === index));
+  }
+
+  function nextStep() {
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      showStep(currentStep);
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 0) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  }
+
+  photoInput.addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        previewContainer.style.display = 'flex';
+        document.querySelector('#preview-container button.btn-warning').style.display = 'inline-block';
+
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(preview, {
+          aspectRatio: 1,
+          viewMode: 1,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  function cropImage() {
+    if (cropper) {
+      const canvas = cropper.getCroppedCanvas();
+      preview.src = canvas.toDataURL();
+      croppedImageData.value = canvas.toDataURL();
+      cropper.destroy();
+      document.querySelector('#preview-container button.btn-warning').style.display = 'none';
+    }
+  }
+
+  function removeImage() {
+    if (cropper) cropper.destroy();
+    preview.src = '';
+    previewContainer.style.display = 'none';
+    photoInput.value = '';
+    croppedImageData.value = '';
+  }
+</script>
+
+</body>
 </html>
